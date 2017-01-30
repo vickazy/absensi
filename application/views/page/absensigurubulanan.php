@@ -18,15 +18,14 @@
         <!-- /.box-header -->
         <div class="box-body">
           <p>
-            <?php $kelasId = $this->uri->segment(4); ?>
-            <form action="<?php echo base_url('main/absensi/2/'.$kelasId) ?>" method="get" style="display: flex;">
+            <form action="<?php echo base_url('main/absensiGuru/2') ?>" method="get" style="display: flex;">
             <div class="input-group" style="margin-right: 10px; width: 20%;">
                 <input class="form-control" type="text" id="datepicker2" required placeholder="Tanggal" name="date">
                 <div class="input-group-btn">
                   <button type="submit" class="btn btn-danger">Ok</button>
                 </div>
             </div>
-            <a target="_blank" class="btn btn-warning" href="<?php echo base_url('main/printToXLS/'.$date.'/S/'.$kelasId); ?>">Print</a>
+            <a target="_blank" class="btn btn-warning" href="<?php echo base_url('main/printToXLS/'.$date.'/G'); ?>">Print</a>
             </form>
           </p>
           <div class="table-responsive">
@@ -35,7 +34,7 @@
                 <th>No</th>
                 <th>Tanggal</th>
                 <?php 
-                  foreach ($listName as $key) {
+                  foreach ($absensi['listName'] as $key) {
                      echo "<th>".$key['nama']."</th>";
                    } 
                 ?>

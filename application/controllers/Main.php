@@ -25,7 +25,6 @@ class Main extends CI_Controller {
 
 	public function absensi($type, $kelasId)
 	{
-		error_reporting(0);
 		date_default_timezone_set('Asia/Jakarta');
 
 		$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
@@ -64,6 +63,54 @@ class Main extends CI_Controller {
 					'absensi'  => $absensi,
 					'date'     => $date,
 					'listName' => $absensi['listName']
+					);
+				break;
+
+			default:
+				break;
+		}
+
+		$this->parser->parse('lte', $data);
+	}
+
+
+	public function absensiGuru($type)
+	{
+		date_default_timezone_set('Asia/Jakarta');
+
+		$sekolah_id = '1';
+		$kelas      = $this->kelas($sekolah_id);
+		
+		switch ($type) {
+			case '1':
+				$date = $_REQUEST['date'];
+				if (!$date) {
+					$date = date('Y-m-d'); 
+				}
+				
+				$data = array(
+					'page'    => 'page/absensiguruharian',
+					'title'   => 'Absensi Guru ('.$date.')',
+					'menu'    => 'Absensi',
+					'submenu' => $kelas,
+					'absensi' => $this->getAbsensiGuru($type, $date),
+					'date'    => $date,
+					);
+				break;
+
+			case '2':
+				$date = $_REQUEST['date'];
+				if (!$date) {
+					$date = date('Y-m'); 
+				}
+				
+				$data = array(
+					'page'    => 'page/absensigurubulanan',
+					'title'   => 'Absensi Guru ('.$date.')',
+					'menu'    => 'Absensi',
+					'submenu' => $kelas,
+					'absensi' => $this->getAbsensiGuru($type, $date),
+					'date'    => $date,
 					);
 				break;
 
@@ -128,9 +175,37 @@ class Main extends CI_Controller {
 	}
 
 
+	public function pdfGuru()
+	{
+		error_reporting(0);
+		$this->load->library('PdfGenerator');
+		$this->load->helper('file');
+
+		$date         = $_REQUEST['date'];
+		$type         = $_REQUEST['type'];
+		$absensi      = $this->getAbsensiGuru($type, $date);
+
+		$data = array(
+			'keterangan' => 'Absensi Guru ('.$date.')',
+			'absensi'    => $absensi);
+
+		switch ($type) {
+			case '1': 
+				$this->pdfgenerator->generate($this->load->view('wellGuru', $data, true), 'contoh', 'A4', 'portrait');
+				break;
+
+			case '2':
+				$this->pdfgenerator->generate($this->load->view('wellGuru2', $data, true), 'contoh', 'A1', 'landscape');
+				break;
+			
+		}
+	}
+
+
 	public function getAbsensi($type, $kelasId, $date)
 	{
-		$siswa = $this->crud->get('user2', array('kelasId' => $kelasId, 'status' => '1'), array('user2.nama' => 'ASC'));
+		$siswa = $this->crud->get('user2', array('kelasId' => $kelasId, 'status' => '1', 'typeUser' => 'S'), array('user2.nama' => 'ASC'));
+		
 		$absensi      = array();
 
 		switch ($type) {
@@ -193,11 +268,90 @@ class Main extends CI_Controller {
 	}
 
 
-	public function printToXLS($kelasId, $date)
+	public function getAbsensiGuru($type, $date)
+	{
+		$Guru = $this->crud->get('user2', array('status' => '1', 'typeUser' => 'G'), array('user2.nama' => 'ASC'));
+		$absensi = array();
+
+		switch ($type) {
+			case '1':
+				foreach ($Guru->result_array() as $key) {
+					$in = $this->crud->get(
+						'transaction',
+						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
+						array('transaction.waktu' => 'ASC'),
+						'1')->row('waktu');
+					
+					$out = $this->crud->get(
+						'transaction',
+						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
+						array('transaction.waktu' => 'DESC'),
+						'1')->row('waktu');
+					
+					$tmp = array('NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => $in, 'OUT' => $out); 
+					array_push($absensi, $tmp);
+				}
+				break;
+
+			case '2':
+				$listDate = $this->crud->getListDate($date,'2');
+
+				foreach ($listDate->result_array() as $key) {
+					$tmp  = array(
+						'TANGGAL' => $key['tanggal'], 
+						'DATA'    => $data);
+
+					$data = array();
+					foreach ($Guru->result_array() as $key2) {
+						$in = $this->crud->get(
+							'transaction',
+							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
+							array('transaction.waktu' => 'ASC'),
+							'1')->row('waktu');
+						
+						$out = $this->crud->get(
+							'transaction',
+							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
+							array('transaction.waktu' => 'DESC'),
+							'1')->row('waktu');
+						
+						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
+						array_push($data, $tmp2);
+					}
+
+					array_push($absensi, $tmp);
+				}
+				$absensi['listName'] = $Guru->result_array();
+				break;
+
+			
+			default:
+				# code...
+				break;
+		}
+
+		return $absensi;
+	}
+
+
+	public function printToXLS($date, $type, $kelasId = null)
 	{
 		error_reporting(0);
 		$this->load->library('ExcelWriter');
-		$absensi = $this->getAbsensi('2', $kelasId, $date);
+
+		switch ($type) {
+			case 'S':
+				$absensi      = $this->getAbsensi('2', $kelasId, $date);
+				$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
+				$filename     = 'LIST ABSENSI '.$kelasJurusan.' ('.$date.')';
+				break;
+			
+			case 'G':
+				$absensi      = $this->getAbsensiGuru('2', $date);
+				$filename     = 'LIST ABSENSI GURU ('.$date.')';
+				break;
+		}
+
 		$names   = array();
 
 		foreach ($absensi['listName'] as $key) {
@@ -227,8 +381,6 @@ class Main extends CI_Controller {
 			$x++;
 		}
 
-		$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
-		$filename     = 'LIST ABSENSI '.$kelasJurusan.' ('.$date.')';
 
 		$this->excelwriter->writeToXLS($header, $data, $filename);
 		exit();

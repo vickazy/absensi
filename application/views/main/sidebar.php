@@ -30,8 +30,8 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-folder"></i> Harian</a></li>
-            <li><a href="#"><i class="fa fa-folder"></i> Bulanan</a></li>
+            <li><a href="<?php echo base_url('main/absensiGuru/1') ?>"><i class="fa fa-folder"></i> Harian</a></li>
+            <li><a href="<?php echo base_url('main/absensiGuru/2') ?>"><i class="fa fa-folder"></i> Bulanan</a></li>
           </ul>
         </li>
         <li class="treeview">
