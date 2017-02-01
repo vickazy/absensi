@@ -19,8 +19,8 @@
         <div class="box-body">
           <p>
             <?php $kelasId = $this->uri->segment(4); ?>
-            <form action="<?php echo base_url('main/absensi/2/'.$kelasId) ?>" method="get" style="display: flex;">
-            <div class="input-group" style="margin-right: 10px; width: 20%;">
+            <form action="<?php echo base_url('main/absensi/2/'.$kelasId) ?>" method="get" style="display: flex; position: absolute;">
+            <div class="input-group" style="margin-right: 10px; width: 250px;">
                 <input class="form-control" type="text" id="datepicker2" required placeholder="Tanggal" name="date">
                 <div class="input-group-btn">
                   <button type="submit" class="btn btn-danger">Ok</button>
@@ -45,27 +45,26 @@
                   if ($absensi['0']['TANGGAL']) {
                     $x = 1; 
                     foreach ($absensi as $key) {
-                      echo "
-                        <tr>
-                          <td>".$x++."</td>
-                          <td>".$key['TANGGAL']."</td>";
+                      if ($key['TANGGAL']) { 
+                        echo "
+                          <tr>
+                            <td>".$x++."</td>
+                            <td>".$key['TANGGAL']."</td>";
 
-                        foreach ($key['DATA'] as $key2) {
-                          if (!$key2['IN']) {
-                            echo "<td class='bg-red color-palette'></td>";
-                          } else {
-                            echo "<td>".$key2['IN']." | ".$key2['OUT']."</td>";
+                          foreach ($key['DATA'] as $key2) {
+                            if (!$key2['IN']) {
+                              echo "<td class='bg-red color-palette'></td>";
+                            } else {
+                              echo "<td>".$key2['IN']." | ".$key2['OUT']."</td>";
+                            }
+                            
                           }
-                          
-                        }
-                      echo "</tr>";
+                        echo "</tr>";
+                      }
                     }
                   }
                   
                  ?>
-                <tr>
-                  <td></td>
-                </tr>
               </tbody>
             </table>
           </div>

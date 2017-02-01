@@ -41,16 +41,16 @@
               <tbody>
                 <?php
                   $x = 1; 
-                  foreach ($absensi as $key) { 
-                  echo "
-                    <tr>
-                      <td>".$x++."</td>
-                      <td>".$key['NIS']."</td>
-                      <td>".$key['NAMA']."</td>
-                      <td>".$key['IN']."</td>
-                      <td>".$key['OUT']."</td>
-                    </tr>
-                  ";
+                  foreach ($absensi as $key) {
+                      echo "
+                        <tr>
+                          <td>".$x++."</td>
+                          <td>".$key['NIS']."</td>
+                          <td>".$key['NAMA']."</td>
+                          <td>".$key['IN']."</td>
+                          <td>".$key['OUT']."</td>
+                        </tr>
+                      ";
                  }
               ?>
               </tbody>

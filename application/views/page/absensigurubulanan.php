@@ -18,8 +18,8 @@
         <!-- /.box-header -->
         <div class="box-body">
           <p>
-            <form action="<?php echo base_url('main/absensiGuru/2') ?>" method="get" style="display: flex;">
-            <div class="input-group" style="margin-right: 10px; width: 20%;">
+            <form action="<?php echo base_url('main/absensiGuru/2') ?>" method="get" style="display: flex; position: absolute;">
+            <div class="input-group" style="margin-right: 10px; width: 215px;">
                 <input class="form-control" type="text" id="datepicker2" required placeholder="Tanggal" name="date">
                 <div class="input-group-btn">
                   <button type="submit" class="btn btn-danger">Ok</button>
@@ -44,27 +44,25 @@
                   if ($absensi['0']['TANGGAL']) {
                     $x = 1; 
                     foreach ($absensi as $key) {
-                      echo "
-                        <tr>
-                          <td>".$x++."</td>
-                          <td>".$key['TANGGAL']."</td>";
+                      if ($key['TANGGAL']) {
+                        echo "
+                          <tr>
+                            <td>".$x++."</td>
+                            <td>".$key['TANGGAL']."</td>";
 
-                        foreach ($key['DATA'] as $key2) {
-                          if (!$key2['IN']) {
-                            echo "<td class='bg-red color-palette'></td>";
-                          } else {
-                            echo "<td>".$key2['IN']." | ".$key2['OUT']."</td>";
+                          foreach ($key['DATA'] as $key2) {
+                            if (!$key2['IN']) {
+                              echo "<td class='bg-red color-palette'></td>";
+                            } else {
+                              echo "<td>".$key2['IN']." | ".$key2['OUT']."</td>";
+                            }
+                            
                           }
-                          
-                        }
-                      echo "</tr>";
+                        echo "</tr>";
+                      }
                     }
                   }
-                  
                  ?>
-                <tr>
-                  <td></td>
-                </tr>
               </tbody>
             </table>
           </div>

@@ -206,7 +206,8 @@ class Main extends CI_Controller {
 	{
 		$siswa = $this->crud->get('user2', array('kelasId' => $kelasId, 'status' => '1', 'typeUser' => 'S'), array('user2.nama' => 'ASC'));
 		
-		$absensi      = array();
+		$absensi = array();
+		$data    = array();
 
 		switch ($type) {
 			case '1':
@@ -251,7 +252,7 @@ class Main extends CI_Controller {
 							'1')->row('waktu');
 						
 						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
-						array_push($data, $tmp2);
+						array_push($tmp['DATA'], $tmp2);
 					}
 
 					array_push($absensi, $tmp);
@@ -272,6 +273,7 @@ class Main extends CI_Controller {
 	{
 		$Guru = $this->crud->get('user2', array('status' => '1', 'typeUser' => 'G'), array('user2.nama' => 'ASC'));
 		$absensi = array();
+		$data    = array();
 
 		switch ($type) {
 			case '1':
@@ -303,22 +305,24 @@ class Main extends CI_Controller {
 
 					$data = array();
 					foreach ($Guru->result_array() as $key2) {
+						
 						$in = $this->crud->get(
 							'transaction',
 							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
 							array('transaction.waktu' => 'ASC'),
 							'1')->row('waktu');
-						
+
 						$out = $this->crud->get(
 							'transaction',
 							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
 							array('transaction.waktu' => 'DESC'),
 							'1')->row('waktu');
-						
-						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
-						array_push($data, $tmp2);
-					}
 
+						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
+
+						array_push($tmp['DATA'], $tmp2);
+
+					}
 					array_push($absensi, $tmp);
 				}
 				$absensi['listName'] = $Guru->result_array();
