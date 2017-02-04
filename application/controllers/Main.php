@@ -7,13 +7,15 @@ class Main extends MY_Controller  {
 	public function __construct(){
  		parent::__construct();
  		$this->load->model('Crud_m','crud');
- 		// $this->load->model('Absensi_m','absensi');
+ 		if  (!$this->session->userdata('username') or !$this->session->userdata('sekolahId')) {
+ 			redirect('Login'); 
+ 		}
  	}
 
 
 	public function index()
 	{
-		$sekolah_id = '2';
+		$sekolah_id = $this->session->userdata('sekolahId');
 		$kelas      = $this->kelas($sekolah_id);
 		$data       = array(
 			'page'    => 'page/dashboard',
@@ -29,7 +31,7 @@ class Main extends MY_Controller  {
 		date_default_timezone_set('Asia/Jakarta');
 
 		$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
-		$sekolah_id   = '2';
+		$sekolah_id   = $this->session->userdata('sekolahId');
 		$kelas        = $this->kelas($sekolah_id);
 		
 		switch ($type) {
@@ -79,7 +81,7 @@ class Main extends MY_Controller  {
 	{
 		date_default_timezone_set('Asia/Jakarta');
 
-		$sekolah_id = '2';
+		$sekolah_id = $this->session->userdata('sekolahId');
 		$kelas      = $this->kelas($sekolah_id);
 		
 		switch ($type) {
