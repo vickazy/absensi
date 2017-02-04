@@ -25,31 +25,31 @@ class Crud_m extends CI_Model {
 	}
 
 
-	public function getListDate($month, $type)
+	public function getListDate($month, $type, $tableUser, $tableTransaction)
 	{
 		switch ($type) {
 			case '1':
 				$sql = "SELECT DISTINCT
-						    (DATE(transaction.waktu)) as tanggal
+						    (DATE(".$tableTransaction.".waktu)) as tanggal
 						FROM
-						    transaction
+						    ".$tableTransaction."
 						        JOIN
-						    user2 ON user2.absenceId = transaction.userId
+						    ".$tableUser." ON ".$tableUser.".absenceId = ".$tableTransaction.".userId
 						WHERE
-						    transaction.waktu LIKE '%".$month."%'
-						        AND user2.typeUser = 'S'";
+						    ".$tableTransaction.".waktu LIKE '%".$month."%'
+						        AND ".$tableUser.".typeUser = 'S'";
 				break;
 
 			case '2':
 				$sql = "SELECT DISTINCT
-						    (DATE(transaction.waktu)) as tanggal
+						    (DATE(".$tableTransaction.".waktu)) as tanggal
 						FROM
-						    transaction
+						    ".$tableTransaction."
 						        JOIN
-						    user2 ON user2.absenceId = transaction.userId
+						    ".$tableUser." ON ".$tableUser.".absenceId = ".$tableTransaction.".userId
 						WHERE
-						    transaction.waktu LIKE '%".$month."%'
-						        AND user2.typeUser = 'G'";
+						    ".$tableTransaction.".waktu LIKE '%".$month."%'
+						        AND ".$tableUser.".typeUser = 'G'";
 				break;
 		}
 		
@@ -62,26 +62,13 @@ class Crud_m extends CI_Model {
 	public function get_kelas_jurusan($condition, $type = null)
 	{
 		if (!$type) {
-			$this->db->select('CONCAT_WS(" ", tingkat.nama, jurusan.nama, kelas.rombel) as kelas, kelas.idKelas as id');
+			$this->db->select('CONCAT_WS(" ", tingkat.nama, jurusan.nama, kelas.rombel) as kelas, kelas.idKelas as id, kelas.sekolahId as sekolahId');
 		} else {
-			$this->db->select('CONCAT_WS(" ", jurusan.aliasName, kelas.rombel) as kelas, kelas.idKelas as id');
+			$this->db->select('CONCAT_WS(" ", jurusan.aliasName, kelas.rombel) as kelas, kelas.idKelas as id, kelas.sekolahId as sekolahId');
 		}
 		$this->db->from('kelas');
 		$this->db->join('jurusan', 'kelas.jurusanId = jurusan.idJurusan');
 		$this->db->join('tingkat', 'tingkat.idTingkat = kelas.tingkatId');
-		$this->db->where($condition);
-		$sql = $this->db->get();
-		return $sql;
-	}
-
-
-	public function get_kelas_jurusan_based_student($condition)
-	{
-		$this->db->select('CONCAT_WS(" ", kelas.kelas, jurusan.nama_jurusan, kelas_sekolah.group) as kelas, kelas_sekolah.id, siswa.*, kelas_sekolah.jurusan_id');
-		$this->db->from('kelas_sekolah');
-		$this->db->join('jurusan', 'kelas_sekolah.jurusan_id = jurusan.id');
-		$this->db->join('kelas', 'kelas.id = kelas_sekolah.kelas_id');
-		$this->db->join('siswa', 'kelas_sekolah.id = siswa.kelas_sekolah_id');
 		$this->db->where($condition);
 		$sql = $this->db->get();
 		return $sql;

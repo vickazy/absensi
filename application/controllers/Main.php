@@ -1,7 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Main extends CI_Controller {
+class Main extends MY_Controller  {
+
 
 	public function __construct(){
  		parent::__construct();
@@ -12,9 +13,9 @@ class Main extends CI_Controller {
 
 	public function index()
 	{
-		$sekolah_id = '1';
+		$sekolah_id = '2';
 		$kelas      = $this->kelas($sekolah_id);
-		$data = array(
+		$data       = array(
 			'page'    => 'page/dashboard',
 			'menu'    => 'Home',
 			'submenu' => $kelas
@@ -28,8 +29,8 @@ class Main extends CI_Controller {
 		date_default_timezone_set('Asia/Jakarta');
 
 		$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
-		$sekolah_id = '1';
-		$kelas      = $this->kelas($sekolah_id);
+		$sekolah_id   = '2';
+		$kelas        = $this->kelas($sekolah_id);
 		
 		switch ($type) {
 			case '1':
@@ -78,7 +79,7 @@ class Main extends CI_Controller {
 	{
 		date_default_timezone_set('Asia/Jakarta');
 
-		$sekolah_id = '1';
+		$sekolah_id = '2';
 		$kelas      = $this->kelas($sekolah_id);
 		
 		switch ($type) {
@@ -155,8 +156,9 @@ class Main extends CI_Controller {
 		$date         = $_REQUEST['date'];
 		$kelasId      = $_REQUEST['kelasId'];
 		$type         = $_REQUEST['type'];
+		$kelas        = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId));
+		$kelasJurusan = $kelas->row('kelas');
 		$absensi      = $this->getAbsensi($type, $kelasId, $date);
-		$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
 
 		$data = array(
 			'keterangan' => $kelasJurusan.' ('.$date.')',
@@ -204,7 +206,10 @@ class Main extends CI_Controller {
 
 	public function getAbsensi($type, $kelasId, $date)
 	{
-		$siswa = $this->crud->get('user2', array('kelasId' => $kelasId, 'status' => '1', 'typeUser' => 'S'), array('user2.nama' => 'ASC'));
+		$table            = $this->is_school();
+		$tableUser        = $table['user'];
+		$tableTransaction = $table['transaction'];
+		$siswa = $this->crud->get($tableUser, array('kelasId' => $kelasId, 'status' => '1', 'typeUser' => 'S'), array($tableUser.'.nama' => 'ASC'));
 		
 		$absensi = array();
 		$data    = array();
@@ -213,15 +218,15 @@ class Main extends CI_Controller {
 			case '1':
 				foreach ($siswa->result_array() as $key) {
 					$in = $this->crud->get(
-						'transaction',
-						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
-						array('transaction.waktu' => 'ASC'),
+						$tableTransaction,
+						array('userId' => $key['absenceId'], 'date(waktu)' => $date),
+						array('waktu' => 'ASC'),
 						'1')->row('waktu');
 					
 					$out = $this->crud->get(
-						'transaction',
-						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
-						array('transaction.waktu' => 'DESC'),
+						$tableTransaction,
+						array('userId' => $key['absenceId'], 'date(waktu)' => $date),
+						array('waktu' => 'DESC'),
 						'1')->row('waktu');
 					
 					$tmp = array('NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => $in, 'OUT' => $out); 
@@ -230,7 +235,7 @@ class Main extends CI_Controller {
 				break;
 
 			case '2':
-				$listDate = $this->crud->getListDate($date,'1');
+				$listDate = $this->crud->getListDate($date,'1', $tableUser, $tableTransaction);
 
 				foreach ($listDate->result_array() as $key) {
 					$tmp  = array(
@@ -240,15 +245,15 @@ class Main extends CI_Controller {
 					$data = array();
 					foreach ($siswa->result_array() as $key2) {
 						$in = $this->crud->get(
-							'transaction',
-							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
-							array('transaction.waktu' => 'ASC'),
+							$tableTransaction,
+							array('userId' => $key2['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key['tanggal']),
+							array($tableTransaction.'.waktu' => 'ASC'),
 							'1')->row('waktu');
 						
 						$out = $this->crud->get(
-							'transaction',
-							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
-							array('transaction.waktu' => 'DESC'),
+							$tableTransaction,
+							array('userId' => $key2['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key['tanggal']),
+							array($tableTransaction.'.waktu' => 'DESC'),
 							'1')->row('waktu');
 						
 						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
@@ -271,7 +276,10 @@ class Main extends CI_Controller {
 
 	public function getAbsensiGuru($type, $date)
 	{
-		$Guru = $this->crud->get('user2', array('status' => '1', 'typeUser' => 'G'), array('user2.nama' => 'ASC'));
+		$table            = $this->is_school();
+		$tableUser        = $table['user'];
+		$tableTransaction = $table['transaction'];
+		$Guru = $this->crud->get($tableUser, array('status' => '1', 'typeUser' => 'G'), array($tableUser.'.nama' => 'ASC'));
 		$absensi = array();
 		$data    = array();
 
@@ -279,15 +287,15 @@ class Main extends CI_Controller {
 			case '1':
 				foreach ($Guru->result_array() as $key) {
 					$in = $this->crud->get(
-						'transaction',
-						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
-						array('transaction.waktu' => 'ASC'),
+						$tableTransaction,
+						array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $date),
+						array($tableTransaction.'.waktu' => 'ASC'),
 						'1')->row('waktu');
 					
 					$out = $this->crud->get(
-						'transaction',
-						array('userId' => $key['absenceId'], 'date(transaction.waktu)' => $date),
-						array('transaction.waktu' => 'DESC'),
+						$tableTransaction,
+						array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $date),
+						array($tableTransaction.'.waktu' => 'DESC'),
 						'1')->row('waktu');
 					
 					$tmp = array('NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => $in, 'OUT' => $out); 
@@ -296,7 +304,7 @@ class Main extends CI_Controller {
 				break;
 
 			case '2':
-				$listDate = $this->crud->getListDate($date,'2');
+				$listDate = $this->crud->getListDate($date,'2', $tableUser, $tableTransaction);
 
 				foreach ($listDate->result_array() as $key) {
 					$tmp  = array(
@@ -307,15 +315,15 @@ class Main extends CI_Controller {
 					foreach ($Guru->result_array() as $key2) {
 						
 						$in = $this->crud->get(
-							'transaction',
-							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
-							array('transaction.waktu' => 'ASC'),
+							$tableTransaction,
+							array('userId' => $key2['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key['tanggal']),
+							array($tableTransaction.'.waktu' => 'ASC'),
 							'1')->row('waktu');
 
 						$out = $this->crud->get(
-							'transaction',
-							array('userId' => $key2['absenceId'], 'date(transaction.waktu)' => $key['tanggal']),
-							array('transaction.waktu' => 'DESC'),
+							$tableTransaction,
+							array('userId' => $key2['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key['tanggal']),
+							array($tableTransaction.'.waktu' => 'DESC'),
 							'1')->row('waktu');
 
 						$tmp2 = array('NAMA' => $key2['nama'], 'NIS' => $key2['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
@@ -388,5 +396,26 @@ class Main extends CI_Controller {
 
 		$this->excelwriter->writeToXLS($header, $data, $filename);
 		exit();
+	}
+
+
+	public function readExcel($value='')
+	{
+		// Load the spreadsheet reader library
+		$this->load->library('excel_reader');
+		$this->excel_reader->read('./uploads/spanpadangguru.xls');
+
+		// Get the contents of the first worksheet
+		$worksheet = $this->excel_reader->sheets[0];
+		foreach ($worksheet['cells'] as $key) {
+			$data = array(
+				'nama'        => trim($key['1']),
+				'absenceId'   => trim($key['2']),
+				'typeUser'    => 'G',
+				'dateCreated' => date('Y-m-d H:i:s'),
+				'dateUpdated' => date('Y-m-d H:i:s'));
+			$this->crud->insert($data ,'userSPANPDG4');
+		}
+		// print_r($worksheet['cells']);
 	}
 }
