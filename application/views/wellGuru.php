@@ -25,6 +25,7 @@
         <tr> 
           <th>No</th>
           <th>Nama</th>
+          <th>Jabatan</th>
           <th>IN</th>
           <th>OUT</th>
         </tr>
@@ -37,6 +38,7 @@
             <tr>
               <td>".$x++."</td>
               <td>".$key['NAMA']."</td>
+              <td>".$key['JABATAN']."</td>
               <td>".$key['IN']."</td>
               <td>".$key['OUT']."</td>
             </tr>

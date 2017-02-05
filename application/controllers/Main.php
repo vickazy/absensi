@@ -59,13 +59,12 @@ class Main extends MY_Controller  {
 				
 				$absensi = $this->getAbsensi($type, $kelasId, $date);
 				$data = array(
-					'page'     => 'page/absensibulanan',
+					'page'     => 'page/absensibulanan2',
 					'title'    => $kelasJurusan.' ('.$date.')',
 					'menu'     => 'Absensi',
 					'submenu'  => $kelas,
 					'absensi'  => $absensi,
-					'date'     => $date,
-					'listName' => $absensi['listName']
+					'date'     => $date
 					);
 				break;
 
@@ -77,12 +76,18 @@ class Main extends MY_Controller  {
 	}
 
 
-	public function absensiGuru($type)
+	public function absensiGuru($type,$typeUser)
 	{
 		date_default_timezone_set('Asia/Jakarta');
 
 		$sekolah_id = $this->session->userdata('sekolahId');
 		$kelas      = $this->kelas($sekolah_id);
+
+		if ($typeUser == 'G') {
+			$title = 'Guru / Karyawan';
+		} else {
+			$title = 'Karyawan';
+		}
 		
 		switch ($type) {
 			case '1':
@@ -93,10 +98,10 @@ class Main extends MY_Controller  {
 				
 				$data = array(
 					'page'    => 'page/absensiguruharian',
-					'title'   => 'Absensi Guru ('.$date.')',
+					'title'   => 'Absensi '.$title.'('.$date.')',
 					'menu'    => 'Absensi',
 					'submenu' => $kelas,
-					'absensi' => $this->getAbsensiGuru($type, $date),
+					'absensi' => $this->getAbsensiGuru($type, $date, $typeUser),
 					'date'    => $date,
 					);
 				break;
@@ -108,11 +113,11 @@ class Main extends MY_Controller  {
 				}
 				
 				$data = array(
-					'page'    => 'page/absensigurubulanan',
-					'title'   => 'Absensi Guru ('.$date.')',
+					'page'    => 'page/absensigurubulanan2',
+					'title'   => 'Absensi '.$title.'('.$date.')',
 					'menu'    => 'Absensi',
 					'submenu' => $kelas,
-					'absensi' => $this->getAbsensiGuru($type, $date),
+					'absensi' => $this->getAbsensiGuru($type, $date, $typeUser),
 					'date'    => $date,
 					);
 				break;
@@ -179,7 +184,7 @@ class Main extends MY_Controller  {
 	}
 
 
-	public function pdfGuru()
+	public function pdfGuru($typeUser)
 	{
 		error_reporting(0);
 		$this->load->library('PdfGenerator');
@@ -187,10 +192,16 @@ class Main extends MY_Controller  {
 
 		$date         = $_REQUEST['date'];
 		$type         = $_REQUEST['type'];
-		$absensi      = $this->getAbsensiGuru($type, $date);
+		$absensi      = $this->getAbsensiGuru($type, $date, $typeUser);
+		
+		if ($typeUser == 'G') {
+			$title = 'Guru / Karyawan';
+		} else {
+			$title = 'Karyawan';
+		}
 
 		$data = array(
-			'keterangan' => 'Absensi Guru ('.$date.')',
+			'keterangan' => 'Absensi '.$title.'('.$date.')',
 			'absensi'    => $absensi);
 
 		switch ($type) {
@@ -236,6 +247,8 @@ class Main extends MY_Controller  {
 				}
 				break;
 
+			/*
+			# FORMAT TABLE -> NAME AS HEADER, DATE AS ROW IN MONTHLY REPORT
 			case '2':
 				$listDate = $this->crud->getListDate($date,'1', $tableUser, $tableTransaction);
 
@@ -266,6 +279,40 @@ class Main extends MY_Controller  {
 				}
 				$absensi['listName'] = $siswa->result_array();
 				break;
+			*/
+
+			# FORMAT TABLE -> DATE AS HEADER, NAME AS ROW IN MONTHLY REPORT
+			case '2':
+				$listDate = $this->crud->getListDate($date,'1', $tableUser, $tableTransaction);
+				foreach ($siswa->result_array() as $key) {
+					$tmp  = array(
+						'NAMA' => $key['nama'], 
+						'DATA' => $data);
+
+					$data = array();
+					foreach ($listDate->result_array() as $key2) {
+						$in = $this->crud->get(
+							$tableTransaction,
+							array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key2['tanggal']),
+							array($tableTransaction.'.waktu' => 'ASC'),
+							'1')->row('waktu');
+
+						$out = $this->crud->get(
+							$tableTransaction,
+							array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key2['tanggal']),
+							array($tableTransaction.'.waktu' => 'DESC'),
+							'1')->row('waktu');
+
+						$tmp2 = array('TANGGAL' => $key2['tanggal'], 'NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
+
+						array_push($tmp['DATA'], $tmp2);
+					}
+					array_push($absensi, $tmp);
+				}
+				
+				$absensi['listtanggal'] = $listDate->result_array();
+				break;
+
 			
 			default:
 				# code...
@@ -276,12 +323,12 @@ class Main extends MY_Controller  {
 	}
 
 
-	public function getAbsensiGuru($type, $date)
+	public function getAbsensiGuru($type, $date, $typeUser)
 	{
 		$table            = $this->is_school();
 		$tableUser        = $table['user'];
 		$tableTransaction = $table['transaction'];
-		$Guru = $this->crud->get($tableUser, array('status' => '1', 'typeUser' => 'G'), array($tableUser.'.nama' => 'ASC'));
+		$Guru = $this->crud->get($tableUser, array('status' => '1', 'typeUser' => $typeUser), array($tableUser.'.urutan' => 'ASC'));
 		$absensi = array();
 		$data    = array();
 
@@ -300,11 +347,13 @@ class Main extends MY_Controller  {
 						array($tableTransaction.'.waktu' => 'DESC'),
 						'1')->row('waktu');
 					
-					$tmp = array('NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => $in, 'OUT' => $out); 
+					$tmp = array('NAMA' => $key['nama'], 'JABATAN' => $key['jabatan'], 'NIS' => $key['nis'] , 'IN' => $in, 'OUT' => $out); 
 					array_push($absensi, $tmp);
 				}
 				break;
 
+			/*
+			FORMAT TABLE -> NAME AS HEADER, DATE AS ROW ON MONTHLY REPORT
 			case '2':
 				$listDate = $this->crud->getListDate($date,'2', $tableUser, $tableTransaction);
 
@@ -337,7 +386,40 @@ class Main extends MY_Controller  {
 				}
 				$absensi['listName'] = $Guru->result_array();
 				break;
+			*/
+			
+			#FORMAT TABLE -> DATE AS HEADER, NAME AS ROW ON MONTHLY REPORT
+			case '2':
+				$listDate = $this->crud->getListDate($date,'2', $tableUser, $tableTransaction);
+				foreach ($Guru->result_array() as $key) {
+					$tmp  = array(
+						'NAMA'    => $key['nama'],
+						'JABATAN' => $key['jabatan'], 
+						'DATA'    => $data);
 
+					$data = array();
+					foreach ($listDate->result_array() as $key2) {
+						$in = $this->crud->get(
+							$tableTransaction,
+							array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key2['tanggal']),
+							array($tableTransaction.'.waktu' => 'ASC'),
+							'1')->row('waktu');
+
+						$out = $this->crud->get(
+							$tableTransaction,
+							array('userId' => $key['absenceId'], 'date('.$tableTransaction.'.waktu)' => $key2['tanggal']),
+							array($tableTransaction.'.waktu' => 'DESC'),
+							'1')->row('waktu');
+
+						$tmp2 = array('TANGGAL' => $key2['tanggal'], 'NAMA' => $key['nama'], 'NIS' => $key['nis'] , 'IN' => substr($in, 11), 'OUT' => substr($out, 11));
+
+						array_push($tmp['DATA'], $tmp2);
+					}
+					array_push($absensi, $tmp);
+				}
+				
+				$absensi['listtanggal'] = $listDate->result_array();
+				break;
 			
 			default:
 				# code...
@@ -348,6 +430,64 @@ class Main extends MY_Controller  {
 	}
 
 
+	public function printToXLS($date, $type, $kelasId = null)
+	{
+		$this->load->library('ExcelWriter');
+
+		switch ($type) {
+			case 'S':
+				$absensi      = $this->getAbsensi('2', $kelasId, $date);
+				$kelasJurusan = $this->crud->get_kelas_jurusan(array('kelas.idKelas' => $kelasId))->row('kelas');
+				$filename     = 'LIST ABSENSI '.$kelasJurusan.' ('.$date.')';
+				break;
+			
+			case 'G':
+				$absensi      = $this->getAbsensiGuru('2', $date, 'G');
+				$filename     = 'LIST ABSENSI GURU ('.$date.')';
+				break;
+
+			case 'Y':
+				$absensi      = $this->getAbsensiGuru('2', $date, 'Y');
+				$filename     = 'LIST ABSENSI YAYASAN ('.$date.')';
+				break;
+		}
+
+		$names   = array();
+
+		foreach ($absensi['listtanggal'] as $key) {
+			$nama = array($key['tanggal'] => 'string');
+			array_push($names, $nama);
+		}
+
+		$array1 = array(
+			'No'      => 'integer',
+			'Nama'    => 'string',
+			'Jabatan' => 'string'
+			);
+		$array2 = array_reduce($names, 'array_merge', array());
+		$header = array_merge($array1, $array2);
+
+		$data = array();
+		$x = 1;
+		foreach ($absensi as $key) {
+			$tmp = array($x, $key['NAMA'], $key['JABATAN']);
+			$inOut = array();
+
+			foreach ($key['DATA'] as $key2) {
+				$tmp2 = array($key2['IN'].' - '.$key2['OUT']); 
+				array_push($inOut, $tmp2);
+			} 
+			$array3 = array_reduce($inOut, 'array_merge', array());
+			$array4 = array_merge($tmp, $array3);
+			array_push($data, $array4);
+			$x++;
+		}
+		$this->excelwriter->writeToXLS($header, $data, $filename);
+		exit();
+	}
+
+	/*
+	# FORMAT REPORT, NAME AS HEADER, DATE AS ROW IN MONTHLY REPORT
 	public function printToXLS($date, $type, $kelasId = null)
 	{
 		error_reporting(0);
@@ -372,6 +512,7 @@ class Main extends MY_Controller  {
 			$nama = array($key['nama'] => 'string');
 			array_push($names, $nama);
 		}
+		
 		$array1 = array(
 			'No'      => 'integer',
 			'Tanggal' => 'date'
@@ -399,6 +540,7 @@ class Main extends MY_Controller  {
 		$this->excelwriter->writeToXLS($header, $data, $filename);
 		exit();
 	}
+	*/
 
 
 	public function readExcel($value='')

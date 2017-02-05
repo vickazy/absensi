@@ -18,14 +18,15 @@
         <!-- /.box-header -->
         <div class="box-body">
           <p>
-            <form action="<?php echo base_url('main/absensiGuru/1') ?>" method="get" style="display: flex; position: absolute;">
+            <?php $typeUser = $this->uri->segment(4); ?>
+            <form action="<?php echo base_url('main/absensiGuru/1/'.$typeUser) ?>" method="get" style="display: flex; position: absolute;">
             <div class="input-group" style="margin-right: 10px;">
                 <input class="form-control" type="text" id="datepicker" required placeholder="Tanggal" name="date">
                 <div class="input-group-btn">
                   <button type="submit" class="btn btn-danger">Ok</button>
                 </div>
             </div>
-            <a target="_blank" class="btn btn-warning" href="<?php echo base_url('main/pdfGuru/?type=1&date='.$date); ?>">Print</a>
+            <a target="_blank" class="btn btn-warning" href="<?php echo base_url('main/pdfGuru/'.$typeUser.'?type=1&date='.$date); ?>">Print</a>
             </form>
           </p>
           <div class="table-responsive">
@@ -33,6 +34,7 @@
               <thead>
                 <th>No</th>
                 <th>Nama</th>
+                <th>Jabatan</th>
                 <th>IN</th>
                 <th>OUT</th>
               </thead>
@@ -44,6 +46,7 @@
                     <tr>
                       <td>".$x++."</td>
                       <td>".$key['NAMA']."</td>
+                      <td>".$key['JABATAN']."</td>
                       <td>".$key['IN']."</td>
                       <td>".$key['OUT']."</td>
                     </tr>

@@ -24,14 +24,27 @@
         <li class="treeview">
           <a href="#">
             <i class="fa fa-child"></i>
+            <span>Yayasan</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="<?php echo base_url('main/absensiGuru/1/Y') ?>"><i class="fa fa-folder"></i> Harian</a></li>
+            <li><a href="<?php echo base_url('main/absensiGuru/2/Y') ?>"><i class="fa fa-folder"></i> Bulanan</a></li>
+          </ul>
+        </li>
+        <li class="treeview">
+          <a href="#">
+            <i class="fa fa-child"></i>
             <span>Guru / Karyawan</span>
             <span class="pull-right-container">
               <i class="fa fa-angle-left pull-right"></i>
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="<?php echo base_url('main/absensiGuru/1') ?>"><i class="fa fa-folder"></i> Harian</a></li>
-            <li><a href="<?php echo base_url('main/absensiGuru/2') ?>"><i class="fa fa-folder"></i> Bulanan</a></li>
+            <li><a href="<?php echo base_url('main/absensiGuru/1/G') ?>"><i class="fa fa-folder"></i> Harian</a></li>
+            <li><a href="<?php echo base_url('main/absensiGuru/2/G') ?>"><i class="fa fa-folder"></i> Bulanan</a></li>
           </ul>
         </li>
         <li class="treeview">
