@@ -2,7 +2,7 @@
 	
 	$this->load->view('main/head');
 	$this->load->view('main/header');
-	$this->load->view('main/sidebar', $submenu); ?>
+	$this->load->view('main/sidebarAdmin'); ?>
     <!-- Content Wrapper. Contains page content -->
     <style type="text/css">
         td {

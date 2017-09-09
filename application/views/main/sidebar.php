@@ -21,6 +21,7 @@
             <i class="fa fa-dashboard"></i> <span>Dashboard</span>
           </a>
         </li>
+        <?php if ($this->session->sekolahId == '1') { ?>
         <li class="treeview">
           <a href="#">
             <i class="fa fa-child"></i>
@@ -34,6 +35,7 @@
             <li><a href="<?php echo base_url('main/absensiGuru/2/Y') ?>"><i class="fa fa-folder"></i> Bulanan</a></li>
           </ul>
         </li>
+        <?php } ?>
         <li class="treeview">
           <a href="#">
             <i class="fa fa-child"></i>
